@@ -7,38 +7,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.eji14.cattycat.coroutine.CoroutineManager
-import kotlinx.coroutines.delay
 
 abstract class ScreenHolder(
     protected val coroutine: CoroutineManager = CoroutineManager(),
     val refreshable: Boolean = false,
     val autoRefresh: Boolean = false,
     val refreshOnStart: Boolean = false,
-    val keepOnBack: Boolean = false
+    val keepOnBack: Boolean = false,
+    val enableNotification: Boolean = false,
+    val secondsBeforeRefresh: Long = 120
 ) {
     var lastUsedTime: Long = System.currentTimeMillis()
-
+    var lastRefreshedTime: Long = 0L
     var showNetworkErrorDialog by mutableStateOf(false)
         private set
-
-    var notification by mutableStateOf<NotificationState?>(null)
+    var notification: NotificationState? by mutableStateOf(null)
         private set
-
     @OptIn(ExperimentalMaterial3Api::class)
-    var pullToRefreshState: PullToRefreshState? = null
-        private set
-
+    val pullToRefreshState: PullToRefreshState? = if (refreshable) PullToRefreshState() else null
     var isRefreshing by mutableStateOf(false)
         private set
 
     private var hasStarted = false
-
-    init {
-        if (refreshable) {
-            @OptIn(ExperimentalMaterial3Api::class)
-            pullToRefreshState = PullToRefreshState()
-        }
-    }
 
     /**
      * will be called on every screen launchedEffect
@@ -47,22 +37,22 @@ abstract class ScreenHolder(
         coroutine.launch {
             log("launch: called")
             if (!hasStarted) {
-                isRefreshing = true
                 log("onStart: started")
+                isRefreshing = true
                 onStart()
                 isRefreshing = false
+                hasStarted = true
                 log("onStart: finished")
             }
 
-            val condition1 = refreshable && refreshOnStart && !hasStarted
+            val condition1 = refreshable && refreshOnStart && lastRefreshedTime < System.currentTimeMillis() - secondsBeforeRefresh * 1000
             val condition2 = refreshable && autoRefresh
             if (condition1 || condition2) {
                 log("onRefresh-launch: started")
                 onRefresh()
+                lastRefreshedTime = System.currentTimeMillis()
                 log("onRefresh-launch: finished")
             }
-
-            hasStarted = true
         }
     }
 
@@ -87,14 +77,14 @@ abstract class ScreenHolder(
         showNetworkErrorDialog = false
     }
 
-    fun showNotification(
+    fun notif(
         message: String,
         type: NotificationType = NotificationType.INFO,
         duration: Long = 3000L,
         actionLabel: String? = null,
         onAction: (() -> Unit)? = null
     ) {
-        notification = NotificationState(
+        if (enableNotification) notification = NotificationState(
             message = message,
             type = type,
             duration = duration,
