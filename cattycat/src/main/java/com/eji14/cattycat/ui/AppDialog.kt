@@ -16,14 +16,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.eji14.cattycat.config.AppConfig
-import com.eji14.cattycat.config.DialogColors
-import com.eji14.cattycat.config.LocalAppConfig
+import com.eji14.cattycat.config.AppConfigBase
+import com.eji14.cattycat.config.LocalAppConfigBase
+
+@Immutable
+data class DialogColors(
+    val containerColor: Color,
+    val titleColor: Color,
+    val textColor: Color,
+    val iconTint: Color
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,9 +47,9 @@ fun AppDialog(
     onConfirm: (() -> Unit)? = null,
     colors: DialogColors? = null,
     dismissible: Boolean = true,
-    config: AppConfig = LocalAppConfig.current
+    config: AppConfigBase = LocalAppConfigBase.current
 ) {
-    val dialogColors = colors ?: config.dialogInfoColors
+    val dialogColors = colors ?: config.dialogColors
 
     BasicAlertDialog(
         onDismissRequest = if (dismissible) onDismiss else {{}},
@@ -70,13 +79,13 @@ fun AppDialog(
 
             Text(
                 text = title,
-                style = config.textStyles.titleLarge,
+                style = config.styles.titleLarge,
                 color = dialogColors.titleColor
             )
 
             Text(
                 text = description,
-                style = config.textStyles.bodyMedium,
+                style = config.styles.bodyMedium,
                 color = dialogColors.textColor
             )
 

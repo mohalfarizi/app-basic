@@ -16,6 +16,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,8 +24,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.eji14.cattycat.config.AppConfig
+import com.eji14.cattycat.config.AppConfigBase
 import com.eji14.cattycat.icons.CattyIcons
 import com.eji14.cattycat.icons.CheckCircle
 import com.eji14.cattycat.icons.Close
@@ -32,10 +34,22 @@ import com.eji14.cattycat.icons.Info
 import com.eji14.cattycat.icons.Warning
 import kotlinx.coroutines.delay
 
+@Immutable
+data class NotificationColors(
+    val success: Color,
+    val onSuccess: Color,
+    val error: Color,
+    val onError: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val info: Color,
+    val onInfo: Color
+)
+
 @Composable
 fun NotificationBanner(
     state: NotificationState?,
-    config: AppConfig,
+    config: AppConfigBase,
     modifier: Modifier = Modifier
 ) {
     var visible by remember(state) { mutableStateOf(state != null) }
@@ -58,24 +72,24 @@ fun NotificationBanner(
     ) {
         if (state != null) {
             val (backgroundColor, contentColor, icon) = when (state.type) {
-                NotificationType.SUCCESS -> Triple(
-                    config.colors.success,
-                    config.colors.onSuccess,
+                NotifType.SUCCESS -> Triple(
+                    config.notificationColors.success,
+                    config.notificationColors.onSuccess,
                     CattyIcons.CheckCircle
                 )
-                NotificationType.ERROR -> Triple(
-                    config.colors.error,
-                    config.colors.onError,
+                NotifType.ERROR -> Triple(
+                    config.notificationColors.error,
+                    config.notificationColors.onError,
                     CattyIcons.Warning
                 )
-                NotificationType.WARNING -> Triple(
-                    config.colors.warning,
-                    config.colors.onWarning,
+                NotifType.WARNING -> Triple(
+                    config.notificationColors.warning,
+                    config.notificationColors.onWarning,
                     CattyIcons.Warning
                 )
-                NotificationType.INFO -> Triple(
-                    config.colors.primary,
-                    config.colors.onPrimary,
+                NotifType.INFO -> Triple(
+                    config.notificationColors.info,
+                    config.notificationColors.onInfo,
                     CattyIcons.Info
                 )
             }
@@ -98,7 +112,7 @@ fun NotificationBanner(
                 Text(
                     text = state.message,
                     color = contentColor,
-                    style = config.textStyles.bodyMedium,
+                    style = config.styles.bodyMedium,
                     modifier = Modifier.weight(1f)
                 )
 

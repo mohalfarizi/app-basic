@@ -45,7 +45,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    debugImplementation(libs.androidx.compose.ui.tooling)
+//    debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Activity Compose for BackHandler
     implementation(libs.androidx.activity.compose)

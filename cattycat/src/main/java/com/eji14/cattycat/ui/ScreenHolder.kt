@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.eji14.cattycat.coroutine.CoroutineManager
+import kotlinx.coroutines.CoroutineScope
 
 abstract class ScreenHolder(
     protected val coroutine: CoroutineManager = CoroutineManager(),
@@ -30,17 +31,39 @@ abstract class ScreenHolder(
 
     private var hasStarted = false
 
+    protected val scope: CoroutineScope
+        get() = coroutine.scope
+
+    protected fun launch(
+        key: String = "",
+        onStart: () -> Unit = {},
+        onEnd: () -> Unit = {},
+        showRefresh: Boolean = false,
+        content: suspend CoroutineScope.() -> Unit
+    ) {
+        coroutine.launch(
+            key = key,
+            onStart = {
+                if (showRefresh) isRefreshing = true
+                onStart()
+            },
+            onEnd = {
+                if (showRefresh) isRefreshing = false
+                onEnd()
+            },
+            block = content
+        )
+    }
+
     /**
      * will be called on every screen launchedEffect
      */
-    fun launch() {
-        coroutine.launch {
+    fun launchEffect() {
+        launch(showRefresh = true) {
             log("launch: called")
             if (!hasStarted) {
                 log("onStart: started")
-                isRefreshing = true
                 onStart()
-                isRefreshing = false
                 hasStarted = true
                 log("onStart: finished")
             }
@@ -57,11 +80,9 @@ abstract class ScreenHolder(
     }
 
     fun refresh() {
-        coroutine.launch {
-            isRefreshing = true
+        launch(showRefresh = true) {
             log("onRefresh: started")
             onRefresh()
-            isRefreshing = false
             log("onRefresh: finished")
         }
     }
@@ -77,9 +98,9 @@ abstract class ScreenHolder(
         showNetworkErrorDialog = false
     }
 
-    fun notif(
+    protected fun notif(
         message: String,
-        type: NotificationType = NotificationType.INFO,
+        type: NotifType = NotifType.INFO,
         duration: Long = 3000L,
         actionLabel: String? = null,
         onAction: (() -> Unit)? = null
@@ -110,13 +131,13 @@ abstract class ScreenHolder(
 
 data class NotificationState(
     val message: String,
-    val type: NotificationType,
+    val type: NotifType,
     val duration: Long,
     val actionLabel: String? = null,
     val onAction: (() -> Unit)? = null,
     val onDismiss: () -> Unit
 )
 
-enum class NotificationType {
+enum class NotifType {
     SUCCESS, ERROR, WARNING, INFO
 }

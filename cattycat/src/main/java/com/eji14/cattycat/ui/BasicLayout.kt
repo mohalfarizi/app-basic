@@ -23,8 +23,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.eji14.cattycat.config.AppConfig
-import com.eji14.cattycat.config.LocalAppConfig
+import com.eji14.cattycat.config.AppConfigBase
+import com.eji14.cattycat.config.LocalAppConfigBase
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +39,7 @@ fun BasicLayout(
     contentAlignment: Alignment.Horizontal = Alignment.Start,
     contentArrangement: Arrangement.Vertical = Arrangement.spacedBy(10.dp),
     contentPadding: Modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-    config: AppConfig = LocalAppConfig.current,
+    config: AppConfigBase = LocalAppConfigBase.current,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val contentModifier = if (scrollBehaviour != null) {
@@ -49,7 +49,7 @@ fun BasicLayout(
     }
 
     LaunchedEffect(Unit) {
-        holder?.launch()
+        holder?.launchEffect()
     }
 
     ConstraintLayout(

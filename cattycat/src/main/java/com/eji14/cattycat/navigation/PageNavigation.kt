@@ -5,13 +5,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.eji14.cattycat.ui.ScreenHolder
+import java.io.Closeable
 import java.util.Stack
 import java.util.concurrent.ConcurrentHashMap
 
 class PageNavigation<P : PageNavigation.Page>(
     private val homePage: P,
     private val enableLogging: Boolean = true
-) {
+) : Closeable {
     enum class Holder(val maxInstances: Int = 1) {
         DEFAULT,
         MULTI(5)
@@ -341,6 +342,10 @@ class PageNavigation<P : PageNavigation.Page>(
             }
         }
         logDebug("Cleared all holders (count: $clearedCount)")
+    }
+
+    override fun close() {
+        clearAllHolders()
     }
 
     private fun logDebug(message: String) {
