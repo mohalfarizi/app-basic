@@ -4,13 +4,13 @@ import kotlinx.coroutines.*
 import java.util.concurrent.ConcurrentHashMap
 
 class CoroutineManager(
-    val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 ) {
     private val jobs = ConcurrentHashMap<String, Job>()
 
     fun launch(
         key: String = "default",
-        dispatcher: CoroutineDispatcher = Dispatchers.Main,
+        dispatcher: CoroutineDispatcher = Dispatchers.IO,
         onStart: () -> Unit = {},
         onEnd: () -> Unit = {},
         onError: (Throwable) -> Unit = {},

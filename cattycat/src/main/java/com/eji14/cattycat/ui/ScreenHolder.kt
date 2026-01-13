@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.eji14.cattycat.coroutine.CoroutineManager
 import kotlinx.coroutines.CoroutineScope
+import java.io.Closeable
 
 abstract class ScreenHolder(
     protected val coroutine: CoroutineManager = CoroutineManager(),
@@ -17,7 +18,7 @@ abstract class ScreenHolder(
     val keepOnBack: Boolean = true,
     val enableNotification: Boolean = false,
     val secondsBeforeRefresh: Long = 120
-) {
+) : Closeable {
     var lastUsedTime: Long = System.currentTimeMillis()
     var lastRefreshedTime: Long = 0L
     var showNetworkErrorDialog by mutableStateOf(false)
@@ -126,6 +127,10 @@ abstract class ScreenHolder(
 
     private fun log(message: String) {
         Log.d("ScreenHolder", message)
+    }
+
+    override fun close() {
+        onCleared()
     }
 }
 
