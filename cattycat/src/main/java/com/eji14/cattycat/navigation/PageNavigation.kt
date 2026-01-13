@@ -13,7 +13,7 @@ class PageNavigation<P : PageNavigation.Page>(
     private val homePage: P,
     private val enableLogging: Boolean = true
 ) : Closeable {
-    enum class Holder(val maxInstances: Int = 1) {
+    enum class Holder(val maxInstances: Int = 10) {
         DEFAULT,
         MULTI(5)
     }

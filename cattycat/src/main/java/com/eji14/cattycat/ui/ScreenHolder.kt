@@ -14,7 +14,7 @@ abstract class ScreenHolder(
     val refreshable: Boolean = false,
     val autoRefresh: Boolean = false,
     val refreshOnStart: Boolean = false,
-    val keepOnBack: Boolean = false,
+    val keepOnBack: Boolean = true,
     val enableNotification: Boolean = false,
     val secondsBeforeRefresh: Long = 120
 ) {
