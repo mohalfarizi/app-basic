@@ -1,5 +1,8 @@
 package com.eji14.cattycat.config
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -7,8 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import com.eji14.cattycat.ui.DialogColors
+import androidx.compose.ui.unit.dp
+import com.eji14.cattycat.ui.DialogUI
 import com.eji14.cattycat.ui.NotificationColors
+import com.eji14.cattycat.ui.components.ButtonConfig
+import com.eji14.cattycat.ui.components.MyTextData
 
 @Immutable
 data class ExtendedColors(
@@ -32,15 +38,45 @@ abstract class AppConfigBase(
     val styles: Typography,
     val shapes: Shapes,
 ) {
+    var textTitle: MyTextData
+        private set
+    var textLabel: MyTextData
+        private set
+    var textContent: MyTextData
+        private set
+
+    lateinit var buttonConfig: ButtonConfig
+        private set
+    lateinit var outlinedButtonConfig: ButtonConfig
+        private set
+    lateinit var textButtonConfig: ButtonConfig
+        private set
+    lateinit var tonalButtonConfig: ButtonConfig
+        private set
+
     lateinit var extendedColors: ExtendedColors
         private set
-    lateinit var dialogColors: DialogColors
+    lateinit var dialogUI: DialogUI
         private set
     lateinit var notificationColors: NotificationColors
         private set
 
     init {
-        initialize()
+        textTitle = MyTextData(
+            style = styles.titleMedium,
+            color = colors.onSurface
+        )
+        textLabel = MyTextData(
+            style = styles.labelMedium,
+            color = colors.onSurfaceVariant
+        )
+        textContent = MyTextData(
+            style = styles.bodyMedium,
+            color = colors.onSurface
+        )
+
+        initializeBasic()
+
         if (!::extendedColors.isInitialized) extendedColors = ExtendedColors(
             success = Color(0xFF4cae4f),
             successDisabled = Color(0xAA4cae4f),
@@ -55,11 +91,14 @@ abstract class AppConfigBase(
             infoDisabled = Color(0xAA00BDE7),
             onInfo = Color(0xFFFFFFFF)
         )
-        if (!::dialogColors.isInitialized) dialogColors = DialogColors(
+        if (!::dialogUI.isInitialized) dialogUI = DialogUI(
             containerColor = colors.surfaceContainerLow,
             titleColor = colors.onSurface,
             textColor = colors.onSurface,
-            iconTint = colors.onSurface
+            iconTint = colors.onSurface,
+            titleTextData = textTitle,
+            descriptionTextData = textContent,
+            buttonTextData = textContent
         )
 
         if (!::notificationColors.isInitialized) notificationColors = NotificationColors(
@@ -74,8 +113,69 @@ abstract class AppConfigBase(
         )
     }
 
-    protected abstract fun initialize()
-    @Composable abstract fun initializeUI()
+    @Composable
+    fun initializeWithCompose() {
+        buttonConfig = ButtonConfig(
+            shape = shapes.medium,
+            colors = ButtonColors(
+                containerColor = colors.primary,
+                disabledContentColor = colors.primary.copy(alpha = 0.6f),
+                contentColor = colors.onPrimary,
+                disabledContainerColor = colors.onPrimary
+            ),
+            elevation = ButtonDefaults.buttonElevation(),
+            border = null,
+            contentPadding = ButtonDefaults.ContentPadding,
+            centered = true
+        )
+
+        tonalButtonConfig = ButtonConfig(
+            shape = shapes.medium,
+            colors = ButtonColors(
+                containerColor = colors.primaryContainer,
+                disabledContentColor = colors.primaryContainer.copy(alpha = 0.8f),
+                contentColor = colors.onPrimaryContainer,
+                disabledContainerColor = colors.onPrimaryContainer
+            ),
+            elevation = ButtonDefaults.buttonElevation(),
+            border = null,
+            contentPadding = ButtonDefaults.ContentPadding,
+            centered = true
+        )
+
+        outlinedButtonConfig = ButtonConfig(
+            shape = shapes.medium,
+            colors = ButtonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                contentColor = colors.primary,
+                disabledContentColor = colors.primary.copy(0.8f)
+            ),
+            elevation = null,
+            border = BorderStroke(1.dp, colors.primary),
+            contentPadding = ButtonDefaults.ContentPadding,
+            centered = true
+        )
+
+        textButtonConfig = ButtonConfig(
+            shape = shapes.medium,
+            colors = ButtonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                contentColor = colors.primary,
+                disabledContentColor = colors.primary.copy(0.8f)
+            ),
+            elevation = null,
+            border = null,
+            contentPadding = ButtonDefaults.ContentPadding,
+            centered = true
+        )
+
+        initializeCompose()
+    }
+
+    protected abstract fun initializeBasic()
+    @Composable protected abstract fun initializeCompose()
 }
 
 val LocalAppConfigBase = staticCompositionLocalOf<AppConfigBase> {

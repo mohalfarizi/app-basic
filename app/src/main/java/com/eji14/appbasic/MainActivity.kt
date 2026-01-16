@@ -1,5 +1,6 @@
 package com.eji14.appbasic
 
+import ShowCaseScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,6 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.eji14.appbasic.ui.screen.DialogExampleScreen
+import com.eji14.appbasic.ui.screen.TextEditorScreen
+import com.eji14.appbasic.ui.screen.TextShowCase
 import com.eji14.appbasic.ui.theme.AppBasicTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +23,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppBasicTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+//                TextEditorScreen {  }
+//                ExampleDialogScreen()
+                DialogExampleScreen()
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AppBasicTheme {
-        Greeting("Android")
     }
 }

@@ -9,7 +9,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
+import com.eji14.appbasic.AppConfig
+import com.eji14.cattycat.config.AppConfigBase
+import com.eji14.cattycat.config.LocalAppConfigBase
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -50,9 +54,15 @@ fun AppBasicTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val config = AppConfig(colorScheme, Typography, MaterialTheme.shapes).also { it.initializeWithCompose() }
+
+    CompositionLocalProvider(
+        LocalAppConfigBase provides config
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
