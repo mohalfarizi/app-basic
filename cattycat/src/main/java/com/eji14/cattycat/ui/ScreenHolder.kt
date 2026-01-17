@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.eji14.cattycat.coroutine.CoroutineManager
+import com.eji14.cattycat.ui.dialog.DialogConfig
+import com.eji14.cattycat.ui.dialog.DialogState
 import kotlinx.coroutines.CoroutineScope
 import java.io.Closeable
 
@@ -29,8 +31,8 @@ abstract class ScreenHolder(
     val pullToRefreshState: PullToRefreshState? = if (refreshable) PullToRefreshState() else null
     var isRefreshing by mutableStateOf(false)
         private set
-
     private var hasStarted = false
+    var dialogState = DialogState()
 
     protected val scope: CoroutineScope
         get() = coroutine.scope
@@ -114,6 +116,26 @@ abstract class ScreenHolder(
             onAction = onAction,
             onDismiss = ::dismissNotification
         )
+    }
+
+    protected fun popupDialog(
+        config: DialogConfig,
+        onDismissed: () -> Unit = {},
+        onPrimaryClicked: () -> Unit = {},
+        onSecondaryClicked: () -> Unit = {},
+        onTertiaryClicked: () -> Unit = {}
+    ) {
+        dialogState.popupDialog(
+            config = config,
+            onDismissed = onDismissed,
+            onPrimaryClicked = onPrimaryClicked,
+            onSecondaryClicked = onSecondaryClicked,
+            onTertiaryClicked = onTertiaryClicked
+        )
+    }
+
+    protected fun dismissDialog() {
+        dialogState.dismiss()
     }
 
     fun dismissNotification() {

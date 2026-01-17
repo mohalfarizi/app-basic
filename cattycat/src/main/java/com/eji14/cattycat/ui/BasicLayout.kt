@@ -25,12 +25,17 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.eji14.cattycat.config.AppConfigBase
 import com.eji14.cattycat.config.LocalAppConfigBase
+import com.eji14.cattycat.ui.dialog.DialogState
+import com.eji14.cattycat.ui.dialog.SingleButtonDialog
+import com.eji14.cattycat.ui.dialog.ThreeButtonDialog
+import com.eji14.cattycat.ui.dialog.TwoButtonDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BasicLayout(
     modifier: Modifier = Modifier,
     holder: ScreenHolder? = null,
+    dialogState: DialogState? = null,
     attachContentToBars: Boolean = true,
     scrollable: Boolean = true,
     topBar: (@Composable (Modifier) -> Unit)? = null,
@@ -50,6 +55,32 @@ fun BasicLayout(
 
     LaunchedEffect(Unit) {
         holder?.launchEffect()
+    }
+
+    if (dialogState != null) {
+        val shownDialog = dialogState.shownDialog
+        if (shownDialog != null) {
+            when {
+                shownDialog.tertiaryButton != null -> ThreeButtonDialog(
+                    onDismissRequest = dialogState::dismiss,
+                    config = shownDialog,
+                    primaryButton = shownDialog.primaryButton,
+                    secondaryButton = shownDialog.secondaryButton!!,
+                    tertiaryButton = shownDialog.tertiaryButton
+                )
+                shownDialog.secondaryButton != null -> TwoButtonDialog(
+                    onDismissRequest = dialogState::dismiss,
+                    config = shownDialog,
+                    primaryButton = shownDialog.primaryButton,
+                    secondaryButton = shownDialog.secondaryButton
+                )
+                else -> SingleButtonDialog(
+                    onDismissRequest = dialogState::dismiss,
+                    config = shownDialog,
+                    button = shownDialog.primaryButton
+                )
+            }
+        }
     }
 
     ConstraintLayout(

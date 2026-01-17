@@ -15,29 +15,20 @@ import com.eji14.cattycat.ui.DialogUI
 import com.eji14.cattycat.ui.NotificationColors
 import com.eji14.cattycat.ui.components.ButtonConfig
 import com.eji14.cattycat.ui.components.MyTextData
-
-@Immutable
-data class ExtendedColors(
-    val success: Color,
-    val successDisabled: Color,
-    val onSuccess: Color,
-    val error: Color,
-    val errorDisabled: Color,
-    val onError: Color,
-    val warning: Color,
-    val warningDisabled: Color,
-    val onWarning: Color,
-    val info: Color,
-    val infoDisabled: Color,
-    val onInfo: Color
-)
+import com.eji14.cattycat.ui.dialog.DialogConfig
+import com.eji14.cattycat.ui.theme.ExtendedColorScheme
 
 @Immutable
 abstract class AppConfigBase(
     val colors: ColorScheme,
+    val extendedColors: ExtendedColorScheme,
     val styles: Typography,
     val shapes: Shapes,
 ) {
+    val warning = extendedColors.warning
+    val info = extendedColors.info
+    val success = extendedColors.success
+
     var textTitle: MyTextData
         private set
     var textLabel: MyTextData
@@ -54,11 +45,10 @@ abstract class AppConfigBase(
     lateinit var tonalButtonConfig: ButtonConfig
         private set
 
-    lateinit var extendedColors: ExtendedColors
-        private set
     lateinit var dialogUI: DialogUI
         private set
-    lateinit var notificationColors: NotificationColors
+
+    internal lateinit var defaultDialogConfig: DialogConfig
         private set
 
     init {
@@ -77,20 +67,6 @@ abstract class AppConfigBase(
 
         initializeBasic()
 
-        if (!::extendedColors.isInitialized) extendedColors = ExtendedColors(
-            success = Color(0xFF4cae4f),
-            successDisabled = Color(0xAA4cae4f),
-            onSuccess = Color(0xFFFFFFFF),
-            error = colors.error,
-            errorDisabled = colors.error.copy(alpha = 0.38f),
-            onError = colors.onError,
-            warning = Color(0xFFff6700),
-            warningDisabled = Color(0xAAff6700),
-            onWarning = colors.onError,
-            info = Color(0xFF00BDE7),
-            infoDisabled = Color(0xAA00BDE7),
-            onInfo = Color(0xFFFFFFFF)
-        )
         if (!::dialogUI.isInitialized) dialogUI = DialogUI(
             containerColor = colors.surfaceContainerLow,
             titleColor = colors.onSurface,
@@ -99,17 +75,6 @@ abstract class AppConfigBase(
             titleTextData = textTitle,
             descriptionTextData = textContent,
             buttonTextData = textContent
-        )
-
-        if (!::notificationColors.isInitialized) notificationColors = NotificationColors(
-            success = extendedColors.success,
-            onSuccess = extendedColors.onSuccess,
-            error = extendedColors.error,
-            onError = extendedColors.onError,
-            warning = extendedColors.warning,
-            onWarning = extendedColors.onWarning,
-            info = extendedColors.info,
-            onInfo = extendedColors.onInfo
         )
     }
 
@@ -171,6 +136,7 @@ abstract class AppConfigBase(
             centered = true
         )
 
+        defaultDialogConfig = DialogConfig()
         initializeCompose()
     }
 

@@ -2,6 +2,7 @@ package com.eji14.appbasic.ui.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.eji14.appbasic.AppConfig
 import com.eji14.cattycat.navigation.PageNavigation
 import com.eji14.cattycat.ui.ScreenHolder
 import com.eji14.cattycat.util.Resource
@@ -52,5 +53,13 @@ private class DashboardHolder : ScreenHolder(
             phoneUsed = 20
         )
         _data.value = Resource.Success(data)
+    }
+
+    fun showNetworkError1(config: AppConfig) {
+        popupDialog(
+            config = config.networkErrorDialogConfig,
+            onPrimaryClicked = {},
+            onSecondaryClicked = {}
+        )
     }
 }

@@ -1,7 +1,11 @@
 package com.eji14.cattycat.ui.dialog
 
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.eji14.cattycat.ui.theme.ExtendedColorScheme
 
 data class DialogColors(
     val backgroundColor: Color,
@@ -20,97 +24,57 @@ val LocalDialogColors = compositionLocalOf<Map<DialogType, DialogColors>> {
 }
 
 object DialogDefaults {
-    fun lightDialogColors() = mapOf(
-        DialogType.ERROR to DialogColors(
-            backgroundColor = Color(0xFFFFFFFF),
-            iconColor = Color(0xFFF34F4F),
-            iconBackgroundColor = Color(0xFFFFEBEE),
-            titleColor = Color(0xFF212121),
-            descriptionColor = Color(0xFF757575),
-            primaryButtonColor = Color(0xFFF34F4F),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFFE0E0E0),
-            secondaryButtonTextColor = Color(0xFF757575)
-        ),
-        DialogType.WARNING to DialogColors(
-            backgroundColor = Color(0xFFFFFFFF),
-            iconColor = Color(0xFFF57C00),
-            iconBackgroundColor = Color(0xFFFFF3E0),
-            titleColor = Color(0xFF212121),
-            descriptionColor = Color(0xFF757575),
-            primaryButtonColor = Color(0xFFF34F4F),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFFE0E0E0),
-            secondaryButtonTextColor = Color(0xFF757575)
-        ),
-        DialogType.SUCCESS to DialogColors(
-            backgroundColor = Color(0xFFFFFFFF),
-            iconColor = Color(0xFF4CAF50),
-            iconBackgroundColor = Color(0xFFE8F5E9),
-            titleColor = Color(0xFF212121),
-            descriptionColor = Color(0xFF757575),
-            primaryButtonColor = Color(0xFF4CAF50),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFFE0E0E0),
-            secondaryButtonTextColor = Color(0xFF757575)
-        ),
-        DialogType.INFO to DialogColors(
-            backgroundColor = Color(0xFFFFFFFF),
-            iconColor = Color(0xFF1976D2),
-            iconBackgroundColor = Color(0xFFE3F2FD),
-            titleColor = Color(0xFF212121),
-            descriptionColor = Color(0xFF757575),
-            primaryButtonColor = Color(0xFF1976D2),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFFE0E0E0),
-            secondaryButtonTextColor = Color(0xFF757575)
+    @Composable
+    fun dialogColors(colors: ColorScheme, extendedColors: ExtendedColorScheme): Map<DialogType, DialogColors> {
+        val warning = extendedColors.warning
+        val info = extendedColors.info
+        val success = extendedColors.success
+
+        return mapOf(
+            DialogType.ERROR to DialogColors(
+                backgroundColor = colors.onError,
+                iconColor = colors.error,
+                iconBackgroundColor = colors.errorContainer,
+                titleColor = colors.error,
+                descriptionColor = LocalContentColor.current,
+                primaryButtonColor = colors.error,
+                primaryButtonTextColor = colors.onError,
+                secondaryButtonBorderColor = colors.outline,
+                secondaryButtonTextColor = colors.error
+            ),
+            DialogType.WARNING to DialogColors(
+                backgroundColor = warning.onColor,
+                iconColor = warning.color,
+                iconBackgroundColor = warning.colorContainer,
+                titleColor = warning.color,
+                descriptionColor = LocalContentColor.current,
+                primaryButtonColor = warning.color,
+                primaryButtonTextColor = warning.onColor,
+                secondaryButtonBorderColor = colors.outline,
+                secondaryButtonTextColor = warning.color
+            ),
+            DialogType.SUCCESS to DialogColors(
+                backgroundColor = success.onColor,
+                iconColor = success.color,
+                iconBackgroundColor = success.colorContainer,
+                titleColor = success.color,
+                descriptionColor = LocalContentColor.current,
+                primaryButtonColor = success.color,
+                primaryButtonTextColor = success.onColor,
+                secondaryButtonBorderColor = colors.outline,
+                secondaryButtonTextColor = success.color
+            ),
+            DialogType.INFO to DialogColors(
+                backgroundColor = info.onColor,
+                iconColor = info.color,
+                iconBackgroundColor = info.colorContainer,
+                titleColor = info.color,
+                descriptionColor = LocalContentColor.current,
+                primaryButtonColor = info.color,
+                primaryButtonTextColor = info.onColor,
+                secondaryButtonBorderColor = colors.outline,
+                secondaryButtonTextColor = info.color
+            )
         )
-    )
-    
-    fun darkDialogColors() = mapOf(
-        DialogType.ERROR to DialogColors(
-            backgroundColor = Color(0xFF2C2C2C),
-            iconColor = Color(0xFFF34F4F),
-            iconBackgroundColor = Color(0xFF4A2121),
-            titleColor = Color(0xFFFFFFFF),
-            descriptionColor = Color(0xFFB0B0B0),
-            primaryButtonColor = Color(0xFFF34F4F),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFF404040),
-            secondaryButtonTextColor = Color(0xFFB0B0B0)
-        ),
-        DialogType.WARNING to DialogColors(
-            backgroundColor = Color(0xFF2C2C2C),
-            iconColor = Color(0xFFF57C00),
-            iconBackgroundColor = Color(0xFF4A3821),
-            titleColor = Color(0xFFFFFFFF),
-            descriptionColor = Color(0xFFB0B0B0),
-            primaryButtonColor = Color(0xFFF34F4F),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFF404040),
-            secondaryButtonTextColor = Color(0xFFB0B0B0)
-        ),
-        DialogType.SUCCESS to DialogColors(
-            backgroundColor = Color(0xFF2C2C2C),
-            iconColor = Color(0xFF4CAF50),
-            iconBackgroundColor = Color(0xFF1E3A1F),
-            titleColor = Color(0xFFFFFFFF),
-            descriptionColor = Color(0xFFB0B0B0),
-            primaryButtonColor = Color(0xFF4CAF50),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFF404040),
-            secondaryButtonTextColor = Color(0xFFB0B0B0)
-        ),
-        DialogType.INFO to DialogColors(
-            backgroundColor = Color(0xFF2C2C2C),
-            iconColor = Color(0xFF1976D2),
-            iconBackgroundColor = Color(0xFF1A2F4A),
-            titleColor = Color(0xFFFFFFFF),
-            descriptionColor = Color(0xFFB0B0B0),
-            primaryButtonColor = Color(0xFF1976D2),
-            primaryButtonTextColor = Color(0xFFFFFFFF),
-            secondaryButtonBorderColor = Color(0xFF404040),
-            secondaryButtonTextColor = Color(0xFFB0B0B0)
-        )
-    )
+    }
 }

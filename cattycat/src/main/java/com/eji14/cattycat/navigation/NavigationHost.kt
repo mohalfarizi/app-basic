@@ -13,12 +13,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import com.eji14.cattycat.ui.dialog.DialogState
+import com.eji14.cattycat.ui.dialog.SingleButtonDialog
+import com.eji14.cattycat.ui.dialog.ThreeButtonDialog
+import com.eji14.cattycat.ui.dialog.TwoButtonDialog
 import kotlinx.coroutines.delay
 
 @Composable
 fun <P : PageNavigation.Page> NavigationHost(
     navigation: PageNavigation<P>,
     modifier: Modifier = Modifier,
+    dialogState: DialogState? = null,
     content: @Composable (P) -> Unit
 ) {
     BackHandler(enabled = navigation.currentState.canGoBack) {
@@ -33,6 +38,32 @@ fun <P : PageNavigation.Page> NavigationHost(
     DisposableEffect(Unit) {
         onDispose {
             navigation.clearStaleHolders()
+        }
+    }
+
+    if (dialogState != null) {
+        val shownDialog = dialogState.shownDialog
+        if (shownDialog != null) {
+            when {
+                shownDialog.tertiaryButton != null -> ThreeButtonDialog(
+                    onDismissRequest = dialogState::dismiss,
+                    config = shownDialog,
+                    primaryButton = shownDialog.primaryButton,
+                    secondaryButton = shownDialog.secondaryButton!!,
+                    tertiaryButton = shownDialog.tertiaryButton
+                )
+                shownDialog.secondaryButton != null -> TwoButtonDialog(
+                    onDismissRequest = dialogState::dismiss,
+                    config = shownDialog,
+                    primaryButton = shownDialog.primaryButton,
+                    secondaryButton = shownDialog.secondaryButton
+                )
+                else -> SingleButtonDialog(
+                    onDismissRequest = dialogState::dismiss,
+                    config = shownDialog,
+                    button = shownDialog.primaryButton
+                )
+            }
         }
     }
 

@@ -3,7 +3,9 @@ package com.eji14.appbasic.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -11,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.eji14.appbasic.AppConfig
 import com.eji14.cattycat.config.AppConfigBase
 import com.eji14.cattycat.config.LocalAppConfigBase
@@ -54,14 +57,27 @@ fun AppBasicTheme(
         else -> LightColorScheme
     }
 
+    val typography = Typography.copy(
+        bodyLarge = Typography.bodyLarge.copy(color = colorScheme.outline),
+        bodyMedium = Typography.bodyMedium.copy(color = colorScheme.outline),
+        bodySmall = Typography.bodySmall.copy(color = colorScheme.outline)
+    )
     val config = AppConfig(colorScheme, Typography, MaterialTheme.shapes).also { it.initializeWithCompose() }
+    val shapes = Shapes(
+        medium = RoundedCornerShape(1.dp),
+        small = RoundedCornerShape(5.dp),
+        extraLarge = RoundedCornerShape(1.dp),
+        extraSmall = RoundedCornerShape(1.dp),
+        large = RoundedCornerShape(1.dp),
+    )
 
     CompositionLocalProvider(
         LocalAppConfigBase provides config
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = Typography,
+            typography = typography,
+            shapes = shapes,
             content = content
         )
     }
