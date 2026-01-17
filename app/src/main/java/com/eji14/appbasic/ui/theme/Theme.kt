@@ -1,6 +1,5 @@
 package com.eji14.appbasic.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +14,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.eji14.appbasic.AppConfig
-import com.eji14.cattycat.config.AppConfigBase
 import com.eji14.cattycat.config.LocalAppConfigBase
 
 private val DarkColorScheme = darkColorScheme(
