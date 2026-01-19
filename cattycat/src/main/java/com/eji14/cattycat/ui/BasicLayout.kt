@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -88,7 +89,7 @@ fun BasicLayout(
             .background(config.colors.background)
             .fillMaxSize()
     ) {
-        val (topBarRef, bottomBarRef, notificationRef, contentRef) = createRefs()
+        val (topBarRef, progressRef, bottomBarRef, notificationRef, contentRef) = createRefs()
 
         if (holder != null && holder.refreshable) {
             PullToRefreshBox(
@@ -121,7 +122,7 @@ fun BasicLayout(
                     .fillMaxSize()
                     .let { if (scrollable) it.verticalScroll(rememberScrollState()) else it }
                     .constrainAs(contentRef) {
-                        top.linkTo(if (attachContentToBars && topBar != null) topBarRef.bottom else parent.top)
+                        top.linkTo(if (attachContentToBars && topBar != null) progressRef.bottom else parent.top)
                         bottom.linkTo(if (attachContentToBars && bottomBar != null) bottomBarRef.top else parent.bottom)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
@@ -140,7 +141,7 @@ fun BasicLayout(
                 state = holder.notification,
                 config = config,
                 modifier = Modifier.constrainAs(notificationRef) {
-                    if (topBar != null) top.linkTo(topBarRef.bottom)
+                    if (topBar != null) top.linkTo(progressRef.bottom)
                     else top.linkTo(parent.top)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
@@ -154,6 +155,31 @@ fun BasicLayout(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             })
+        }
+
+        if (holder != null && (holder.isLoadingProgress || holder.progressPercentage != null)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .constrainAs(progressRef) {
+                        top.linkTo(if (topBar != null) topBarRef.bottom else parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+            ) {
+                if (holder.isLoadingProgress) LinearProgressIndicator(
+                    color = config.colors.primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (holder.progressPercentage != null && holder.progressPercentage!! >= 0 && holder.progressPercentage!! <= 100) {
+                    LinearProgressIndicator(
+                        progress = { holder.progressPercentage!! / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = config.colors.secondary
+                    )
+                }
+            }
         }
 
         if (bottomBar != null) {

@@ -21,18 +21,23 @@ abstract class ScreenHolder(
     val enableNotification: Boolean = false,
     val secondsBeforeRefresh: Long = 120
 ) : Closeable {
+    @OptIn(ExperimentalMaterial3Api::class)
+    val pullToRefreshState: PullToRefreshState? = if (refreshable) PullToRefreshState() else null
+    var dialogState = DialogState()
+
+    var isLoadingProgress by mutableStateOf(false)
+    var progressPercentage: Float? by mutableStateOf(null)
     var lastUsedTime: Long = System.currentTimeMillis()
-    var lastRefreshedTime: Long = 0L
+
+    private var lastRefreshedTime: Long = 0L
+    private var hasStarted = false
+
     var showNetworkErrorDialog by mutableStateOf(false)
         private set
     var notification: NotificationState? by mutableStateOf(null)
         private set
-    @OptIn(ExperimentalMaterial3Api::class)
-    val pullToRefreshState: PullToRefreshState? = if (refreshable) PullToRefreshState() else null
     var isRefreshing by mutableStateOf(false)
         private set
-    private var hasStarted = false
-    var dialogState = DialogState()
 
     protected val scope: CoroutineScope
         get() = coroutine.scope
@@ -47,11 +52,11 @@ abstract class ScreenHolder(
         coroutine.launch(
             key = key,
             onStart = {
-                if (showRefresh) isRefreshing = true
+                if (showRefresh) isLoadingProgress = true
                 onStart()
             },
             onEnd = {
-                if (showRefresh) isRefreshing = false
+                if (showRefresh) isLoadingProgress = false
                 onEnd()
             },
             block = content

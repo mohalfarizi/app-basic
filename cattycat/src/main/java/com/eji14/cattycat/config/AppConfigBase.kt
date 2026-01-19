@@ -12,7 +12,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.eji14.cattycat.ui.DialogUI
-import com.eji14.cattycat.ui.NotificationColors
 import com.eji14.cattycat.ui.components.ButtonConfig
 import com.eji14.cattycat.ui.components.MyTextData
 import com.eji14.cattycat.ui.dialog.DialogConfig
@@ -21,7 +20,7 @@ import com.eji14.cattycat.ui.theme.ExtendedColorScheme
 @Immutable
 abstract class AppConfigBase(
     val colors: ColorScheme,
-    val extendedColors: ExtendedColorScheme,
+    extendedColors: ExtendedColorScheme,
     val styles: Typography,
     val shapes: Shapes,
 ) {

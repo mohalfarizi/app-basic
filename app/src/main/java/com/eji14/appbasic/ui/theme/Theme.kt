@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.eji14.appbasic.AppConfig
 import com.eji14.cattycat.config.LocalAppConfigBase
+import com.eji14.cattycat.ui.theme.extendedDark
+import com.eji14.cattycat.ui.theme.extendedLight
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -26,16 +28,6 @@ private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
 )
 
 @Composable
@@ -54,13 +46,17 @@ fun AppBasicTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+    val extendedColors = when {
+        darkTheme -> extendedDark
+        else -> extendedLight
+    }
 
     val typography = Typography.copy(
         bodyLarge = Typography.bodyLarge.copy(color = colorScheme.outline),
         bodyMedium = Typography.bodyMedium.copy(color = colorScheme.outline),
         bodySmall = Typography.bodySmall.copy(color = colorScheme.outline)
     )
-    val config = AppConfig(colorScheme, Typography, MaterialTheme.shapes).also { it.initializeWithCompose() }
+    val config = AppConfig(colorScheme, extendedColors, typography, MaterialTheme.shapes).also { it.initializeWithCompose() }
     val shapes = Shapes(
         medium = RoundedCornerShape(1.dp),
         small = RoundedCornerShape(5.dp),
