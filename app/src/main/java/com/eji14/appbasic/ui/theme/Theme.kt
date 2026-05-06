@@ -50,13 +50,11 @@ fun AppBasicTheme(
         darkTheme -> extendedDark
         else -> extendedLight
     }
-
     val typography = Typography.copy(
         bodyLarge = Typography.bodyLarge.copy(color = colorScheme.outline),
         bodyMedium = Typography.bodyMedium.copy(color = colorScheme.outline),
         bodySmall = Typography.bodySmall.copy(color = colorScheme.outline)
     )
-    val config = AppConfig(colorScheme, extendedColors, typography, MaterialTheme.shapes).also { it.initializeWithCompose() }
     val shapes = Shapes(
         medium = RoundedCornerShape(1.dp),
         small = RoundedCornerShape(5.dp),
@@ -64,6 +62,7 @@ fun AppBasicTheme(
         extraSmall = RoundedCornerShape(1.dp),
         large = RoundedCornerShape(1.dp),
     )
+    val config = AppConfig(colorScheme, extendedColors, typography, shapes).also { it.InitializeWithCompose() }
 
     CompositionLocalProvider(
         LocalAppConfigBase provides config

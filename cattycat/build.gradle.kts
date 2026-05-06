@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+//    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("maven-publish")
 }
@@ -26,9 +26,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+//    compilerOptions {
+//        jvmTarget = JvmTarget.JVM_11
+//    }
     buildFeatures {
         compose = true
     }
@@ -59,12 +59,18 @@ afterEvaluate {
     publishing {
         publications {
             register<MavenPublication>("release") {
-                from(components["release"])
-
-                // These will be your coordinates: com.github.user:cattycat:1.0.0
-                groupId = group.toString()
+                groupId = "com.github.mohalfarizi"
                 artifactId = "cattycat"
-                version = version.toString()
+                version = "v1.0.0"
+            }
+        }
+    }
+
+// Wire up the component AFTER android block has registered it
+    components.whenObjectAdded {
+        if (this.name == "release") {
+            publishing.publications.withType<MavenPublication>().named("release") {
+                from(this@whenObjectAdded)
             }
         }
     }

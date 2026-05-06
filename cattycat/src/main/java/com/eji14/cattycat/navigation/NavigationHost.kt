@@ -2,9 +2,12 @@ package com.eji14.cattycat.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -13,17 +16,68 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import com.eji14.cattycat.ui.dialog.DialogState
-import com.eji14.cattycat.ui.dialog.SingleButtonDialog
-import com.eji14.cattycat.ui.dialog.ThreeButtonDialog
-import com.eji14.cattycat.ui.dialog.TwoButtonDialog
 import kotlinx.coroutines.delay
+
+private const val ANIM_DURATION = PageNavigation.NAVIGATION_ANIMATION_DURATION
+
+private fun slideTransition(direction: PageNavigation.NavDirection): ContentTransform =
+    when (direction) {
+        PageNavigation.NavDirection.FORWARD -> slideInHorizontally(
+            initialOffsetX = { it },
+            animationSpec = tween(ANIM_DURATION)
+        ) + fadeIn(
+            animationSpec = tween(ANIM_DURATION)
+        ) togetherWith slideOutHorizontally(
+            targetOffsetX = { -it / 3 },
+            animationSpec = tween(ANIM_DURATION)
+        ) + fadeOut(
+            animationSpec = tween(ANIM_DURATION)
+        )
+
+        PageNavigation.NavDirection.BACKWARD -> slideInHorizontally(
+            initialOffsetX = { -it / 3 },
+            animationSpec = tween(ANIM_DURATION)
+        ) + fadeIn(
+            animationSpec = tween(ANIM_DURATION)
+        ) togetherWith slideOutHorizontally(
+            targetOffsetX = { it },
+            animationSpec = tween(ANIM_DURATION)
+        ) + fadeOut(
+            animationSpec = tween(ANIM_DURATION)
+        )
+
+        else -> fadeIn(
+            animationSpec = tween(ANIM_DURATION)
+        ) togetherWith fadeOut(
+            animationSpec = tween(ANIM_DURATION)
+        )
+    }
+
+private fun fadeScaleTransition(direction: PageNavigation.NavDirection): ContentTransform =
+    when (direction) {
+        PageNavigation.NavDirection.FORWARD ->
+            (scaleIn(initialScale = 0.85f, animationSpec = tween(ANIM_DURATION)) +
+                    fadeIn(animationSpec = tween(ANIM_DURATION))) togetherWith
+                    (scaleOut(targetScale = 1.08f, animationSpec = tween(ANIM_DURATION)) +
+                            fadeOut(animationSpec = tween(ANIM_DURATION)))
+
+        PageNavigation.NavDirection.BACKWARD ->
+            (scaleIn(initialScale = 1.08f, animationSpec = tween(ANIM_DURATION)) +
+                    fadeIn(animationSpec = tween(ANIM_DURATION))) togetherWith
+                    (scaleOut(targetScale = 0.85f, animationSpec = tween(ANIM_DURATION)) +
+                            fadeOut(animationSpec = tween(ANIM_DURATION)))
+
+        else -> fadeIn(
+            animationSpec = tween(ANIM_DURATION)
+        ) togetherWith fadeOut(
+            animationSpec = tween(ANIM_DURATION)
+        )
+    }
 
 @Composable
 fun <P : PageNavigation.Page> NavigationHost(
     navigation: PageNavigation<P>,
     modifier: Modifier = Modifier,
-    dialogState: DialogState? = null,
     content: @Composable (P) -> Unit
 ) {
     BackHandler(enabled = navigation.currentState.canGoBack) {
@@ -31,7 +85,7 @@ fun <P : PageNavigation.Page> NavigationHost(
     }
 
     LaunchedEffect(navigation.currentState.currentPage) {
-        delay(PageNavigation.NAVIGATION_ANIMATION_DURATION.toLong())
+        delay(ANIM_DURATION.toLong())
         navigation.unlockNavigation()
     }
 
@@ -41,76 +95,17 @@ fun <P : PageNavigation.Page> NavigationHost(
         }
     }
 
-    if (dialogState != null) {
-        val shownDialog = dialogState.shownDialog
-        if (shownDialog != null) {
-            when {
-                shownDialog.tertiaryButton != null -> ThreeButtonDialog(
-                    onDismissRequest = dialogState::dismiss,
-                    config = shownDialog,
-                    primaryButton = shownDialog.primaryButton,
-                    secondaryButton = shownDialog.secondaryButton!!,
-                    tertiaryButton = shownDialog.tertiaryButton
-                )
-                shownDialog.secondaryButton != null -> TwoButtonDialog(
-                    onDismissRequest = dialogState::dismiss,
-                    config = shownDialog,
-                    primaryButton = shownDialog.primaryButton,
-                    secondaryButton = shownDialog.secondaryButton
-                )
-                else -> SingleButtonDialog(
-                    onDismissRequest = dialogState::dismiss,
-                    config = shownDialog,
-                    button = shownDialog.primaryButton
-                )
-            }
-        }
-    }
-
     AnimatedContent(
         targetState = navigation.currentState.currentPage,
         transitionSpec = {
-            when (navigation.navDirection) {
-                PageNavigation.NavDirection.FORWARD -> {
-                    slideInHorizontally(
-                        initialOffsetX = { it },
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) + fadeIn(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) togetherWith slideOutHorizontally(
-                        targetOffsetX = { -it / 3 },
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) + fadeOut(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    )
-                }
-                PageNavigation.NavDirection.BACKWARD -> {
-                    slideInHorizontally(
-                        initialOffsetX = { -it / 3 },
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) + fadeIn(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) togetherWith slideOutHorizontally(
-                        targetOffsetX = { it },
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) + fadeOut(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    )
-                }
-                PageNavigation.NavDirection.REPLACE -> {
-                    fadeIn(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) togetherWith fadeOut(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    )
-                }
-                PageNavigation.NavDirection.NONE -> {
-                    fadeIn(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    ) togetherWith fadeOut(
-                        animationSpec = tween(PageNavigation.NAVIGATION_ANIMATION_DURATION)
-                    )
-                }
+            val style = when (navigation.navDirection) {
+                PageNavigation.NavDirection.FORWARD -> targetState.animationStyle
+                PageNavigation.NavDirection.BACKWARD -> initialState.animationStyle
+                else -> PageNavigation.AnimationStyle.SLIDE
+            }
+            when (style) {
+                PageNavigation.AnimationStyle.SLIDE -> slideTransition(navigation.navDirection)
+                PageNavigation.AnimationStyle.FADE_SCALE -> fadeScaleTransition(navigation.navDirection)
             }
         },
         modifier = modifier.fillMaxSize(),

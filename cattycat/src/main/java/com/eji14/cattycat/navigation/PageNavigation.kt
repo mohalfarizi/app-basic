@@ -4,24 +4,33 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.eji14.cattycat.ui.ScreenHolder
+import com.eji14.cattycat.ui.screen.ScreenHolder
 import java.io.Closeable
-import java.util.Stack
 import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("unused")
 class PageNavigation<P : PageNavigation.Page>(
     private val homePage: P,
     private val enableLogging: Boolean = true
 ) : Closeable {
-    enum class Holder(val maxInstances: Int = 10) {
-        DEFAULT,
-        MULTI(5)
+
+    @Suppress("unused")
+    enum class Holder(val maxInstances: Int) {
+        SINGLE(1),
+        LIMITED(5),
+        DEFAULT(10),
     }
+
+    enum class AnimationStyle {
+        SLIDE,
+        FADE_SCALE,
+}
 
     abstract class Page(
         val identifier: String,
         val routeKey: String = identifier,
-        val holder: Holder = Holder.DEFAULT
+        val holder: Holder = Holder.DEFAULT,
+        val animationStyle: AnimationStyle = AnimationStyle.SLIDE
     ) {
         open fun getRouteData(): Map<String, Any?> = emptyMap()
     }
@@ -42,7 +51,8 @@ class PageNavigation<P : PageNavigation.Page>(
         FORWARD, BACKWARD, REPLACE, NONE
     }
 
-    private val navigationStack = Stack<NavigationEntry<P>>()
+    private val navigationStack = ArrayDeque<NavigationEntry<P>>()
+
     private val holdersMap = ConcurrentHashMap<Holder, MutableMap<String, ScreenHolder>>()
 
     var currentState by mutableStateOf(NavigationState(homePage, false, 1))
@@ -64,7 +74,7 @@ class PageNavigation<P : PageNavigation.Page>(
     }
 
     init {
-        navigationStack.push(NavigationEntry(homePage))
+        navigationStack.addLast(NavigationEntry(homePage))
         currentData = buildDataMap(homePage, emptyMap())
     }
 
@@ -73,32 +83,43 @@ class PageNavigation<P : PageNavigation.Page>(
             if (isNavigating) {
                 logDebug("Navigation blocked: already navigating")
                 return
+            } else if (page == navigationStack.last().page) {
+                logDebug("Navigation blocked: already on the page")
+                return
             }
 
             performNavigation {
                 navDirection = NavDirection.FORWARD
-                navigationStack.push(NavigationEntry(page, additionalData))
+                navigationStack.addLast(NavigationEntry(page, additionalData))
                 finalizeNavigation(page, additionalData)
             }
         }
     }
 
-    fun replace(page: P, additionalData: Map<String, Any?> = emptyMap()) {
+    fun replace(
+        page: P,
+        additionalData: Map<String, Any?> = emptyMap(),
+        direction: NavDirection = NavDirection.REPLACE
+    ) {
+        require(direction != NavDirection.NONE) { "replace() direction must not be NONE; use REPLACE, FORWARD, or BACKWARD" }
         synchronized(this) {
             if (isNavigating) {
                 logDebug("Replace blocked: already navigating")
                 return
+            } else if (page == navigationStack.last().page) {
+                logDebug("Navigation blocked: already on the page")
+                return
             }
 
             performNavigation {
-                navDirection = NavDirection.REPLACE
+                navDirection = direction
 
                 if (navigationStack.isNotEmpty()) {
-                    val replaced = navigationStack.pop()
+                    val replaced = navigationStack.removeLast()
                     cleanupHolder(replaced.page)
                 }
 
-                navigationStack.push(NavigationEntry(page, additionalData))
+                navigationStack.addLast(NavigationEntry(page, additionalData))
                 finalizeNavigation(page, additionalData)
             }
         }
@@ -114,21 +135,21 @@ class PageNavigation<P : PageNavigation.Page>(
             performNavigation {
                 navDirection = NavDirection.BACKWARD
 
-                val currentEntry = navigationStack.pop()
+                val currentEntry = navigationStack.removeLast()
                 cleanupHolder(currentEntry.page)
 
-                while (navigationStack.size > 1 && skipUntil(navigationStack.peek().page)) {
-                    val skippedEntry = navigationStack.pop()
+                while (navigationStack.size > 1 && skipUntil(navigationStack.last().page)) {
+                    val skippedEntry = navigationStack.removeLast()
                     cleanupHolder(skippedEntry.page)
                     logDebug("Skipped page: ${skippedEntry.page}")
                 }
 
                 if (navigationStack.isEmpty()) {
-                    navigationStack.push(NavigationEntry(homePage))
+                    navigationStack.addLast(NavigationEntry(homePage))
                     logDebug("Navigation stack became empty, restored home page")
                 }
 
-                val previousEntry = navigationStack.peek()
+                val previousEntry = navigationStack.last()
 
                 val mergedAdditionalData = if (resultData != null) {
                     previousEntry.additionalData + resultData
@@ -152,8 +173,8 @@ class PageNavigation<P : PageNavigation.Page>(
 
     fun home(additionalData: Map<String, Any?>? = null) {
         synchronized(this) {
-            if (isNavigating || navigationStack.size <= 1) {
-                logDebug("Home blocked: already navigating or at root")
+            if (isNavigating) {
+                logDebug("Home blocked: already navigating")
                 return
             }
 
@@ -162,15 +183,16 @@ class PageNavigation<P : PageNavigation.Page>(
                 navigationStack.clear()
 
                 val finalData = additionalData ?: emptyMap()
-                navigationStack.push(NavigationEntry(homePage, finalData))
+                navigationStack.addLast(NavigationEntry(homePage, finalData))
                 navDirection = NavDirection.NONE
                 finalizeNavigation(homePage, finalData)
             }
         }
     }
 
-    fun unlockNavigation() {
+    internal fun unlockNavigation() {
         isNavigating = false
+        clearStaleHolders()
         logDebug("Navigation unlocked")
     }
 
@@ -191,7 +213,7 @@ class PageNavigation<P : PageNavigation.Page>(
     }
 
     private fun buildDataMap(page: P, additionalData: Map<String, Any?>): Map<String, Any?> {
-        return additionalData + page.getRouteData()
+        return page.getRouteData() + additionalData
     }
 
     inline fun <reified T : Page> getCurrentPage(): T? {
@@ -208,21 +230,25 @@ class PageNavigation<P : PageNavigation.Page>(
 
     fun hasData(key: String): Boolean = currentData.containsKey(key)
 
+
     fun updateCurrentData(updates: Map<String, Any?>) {
         synchronized(this) {
             if (navigationStack.isEmpty()) return
 
-            val current = navigationStack.pop()
+            val current = navigationStack.removeLast()
             val newAdditionalData = current.additionalData + updates
-            navigationStack.push(current.copy(
-                additionalData = newAdditionalData,
-                timestamp = System.currentTimeMillis()
-            ))
+            navigationStack.addLast(
+                current.copy(
+                    additionalData = newAdditionalData,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
 
             currentData = buildDataMap(current.page, newAdditionalData)
             logDebug("Updated current page data: $updates")
         }
     }
+
 
     @Suppress("UNCHECKED_CAST")
     fun <T : ScreenHolder> getHolder(page: P, factory: () -> T): T {
@@ -286,7 +312,7 @@ class PageNavigation<P : PageNavigation.Page>(
         holdersMap.values.forEach { holders ->
             synchronized(holders) {
                 val stale = holders.filter { (_, holder) ->
-                    !holder.keepOnBack && (now - holder.lastUsedTime) > HOLDER_MAX_AGE_MS
+                    !holder.cacheable && (now - holder.lastUsedTime) > HOLDER_MAX_AGE_MS
                 }
 
                 stale.forEach { (identifier, holder) ->
@@ -317,11 +343,12 @@ class PageNavigation<P : PageNavigation.Page>(
 
             when {
                 holder == null -> {}
-                holder.keepOnBack -> {
+                holder.cacheable -> {
                     holder.lastUsedTime = System.currentTimeMillis()
                     holders[page.identifier] = holder
                     logDebug("Kept holder (keepOnBack=true): ${page.identifier}")
                 }
+
                 else -> {
                     holder.onCleared()
                     logDebug("Cleared holder: ${page.identifier}")

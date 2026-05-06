@@ -1,16 +1,22 @@
-package com.eji14.cattycat.coroutine
+package com.eji14.cattycat.core.coroutine
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
-class CoroutineManager(
-    val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+internal class CoroutineManager(
+    val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 ) {
     private val jobs = ConcurrentHashMap<String, Job>()
 
     fun launch(
         key: String = "default",
-        dispatcher: CoroutineDispatcher = Dispatchers.IO,
         onStart: () -> Unit = {},
         onEnd: () -> Unit = {},
         onError: (Throwable) -> Unit = {},
@@ -18,7 +24,7 @@ class CoroutineManager(
     ): Boolean {
         if (isRunning(key)) return false
 
-        val job = scope.launch(dispatcher) {
+        val job = scope.launch {
             try {
                 onStart()
                 block()
@@ -38,17 +44,7 @@ class CoroutineManager(
         return true
     }
 
-    fun launchIO(
-        key: String = "default",
-        onStart: () -> Unit = {},
-        onEnd: () -> Unit = {},
-        onError: (Throwable) -> Unit = {},
-        block: suspend CoroutineScope.() -> Unit
-    ): Boolean = launch(key, Dispatchers.IO, onStart, onEnd, onError, block)
-
-    fun isRunning(key: String = "default"): Boolean {
-        return jobs[key]?.isActive == true
-    }
+    fun isRunning(key: String = "default") = jobs[key]?.isActive == true
 
     fun cancel(key: String = "default"): Boolean {
         val job = jobs[key]
@@ -56,25 +52,11 @@ class CoroutineManager(
             job.cancel()
             jobs.remove(key)
             true
-        } else {
-            false
-        }
+        } else false
     }
 
     fun cancelAll() {
         jobs.values.forEach { it.cancel() }
         jobs.clear()
     }
-
-    suspend fun await(key: String = "default") {
-        jobs[key]?.join()
-    }
-
-    fun getActiveCount(): Int = jobs.count { it.value.isActive }
-
-    fun cleanup() {
-        jobs.entries.removeIf { !it.value.isActive }
-    }
-
-    fun getActiveKeys(): List<String> = jobs.filter { it.value.isActive }.keys.toList()
 }
