@@ -25,6 +25,7 @@ abstract class ScreenHolder(
     private val enableNotification: Boolean = false,
     private val maxNotifications: Int = Int.MAX_VALUE,
     saveScrollState: Boolean = true,
+    scrollOffset: Int = 0,
     initializeWithLoading: Boolean = false,
     enableDialog: Boolean = false,
     enablePullToRefresh: Boolean = false,
@@ -35,33 +36,23 @@ abstract class ScreenHolder(
     private val coroutine: CoroutineManager = CoroutineManager()
     @OptIn(ExperimentalMaterial3Api::class)
     internal val pullToRefreshState: PullToRefreshState? = if (enablePullToRefresh) PullToRefreshState() else null
-    internal val scrollState: ScrollState? = if (saveScrollState) ScrollState(0) else null
-
-
+    internal val scrollState: ScrollState? = if (saveScrollState) ScrollState(scrollOffset) else null
     internal var onManualExit: () -> Unit = {}
-
-
     var showInitializeLoading by mutableStateOf(initializeWithLoading)
     internal var progressState by mutableStateOf<ProgressState>(ProgressState.None)
     internal var lastUsedTime: Long = System.currentTimeMillis()
 
-
     internal var isRefreshing by mutableStateOf(false)
         private set
-
 
     var notifications by mutableStateOf<List<NotificationState>>(emptyList())
         private set
 
-
     private var hasStarted = false
     private var lastRefreshedTime: Long = 0L
-
     protected val scope: CoroutineScope get() = coroutine.scope
-
     protected fun <R> Flow<R>.asStateFlow(default: R) =
         stateIn(scope, SharingStarted.WhileSubscribed(5000), default)
-
 
     protected fun launch(
         key: String = "default", onStart: () -> Unit = {}, onEnd: () -> Unit = {}, showProgress: Boolean = false, block: suspend CoroutineScope.() -> Unit
@@ -82,7 +73,6 @@ abstract class ScreenHolder(
 
     protected fun cancel(key: String = "default") = coroutine.cancel(key)
 
-
     internal fun launchEffect() {
         launch(showProgress = true) {
             if (!hasStarted) {
@@ -97,7 +87,6 @@ abstract class ScreenHolder(
         }
     }
 
-
     fun refresh() {
         launch(showProgress = pullToRefreshState == null) {
             isRefreshing = true
@@ -109,11 +98,9 @@ abstract class ScreenHolder(
 
     fun resetState() = onResetState()
 
-
     fun exit() {
         if (enableManualExit) onManualExit()
     }
-
 
     fun notify(
         id: String = "default",

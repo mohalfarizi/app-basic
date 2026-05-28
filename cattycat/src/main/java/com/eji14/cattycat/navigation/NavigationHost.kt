@@ -18,6 +18,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.delay
 
+// hai
+
 private const val ANIM_DURATION = PageNavigation.NAVIGATION_ANIMATION_DURATION
 
 private fun slideTransition(direction: PageNavigation.NavDirection): ContentTransform =

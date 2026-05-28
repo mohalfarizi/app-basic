@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -26,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -39,10 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.eji14.cattycat.core.config.AppConfigBase
-import com.eji14.cattycat.core.config.LocalAppConfigBase
 import com.eji14.cattycat.test.TodoDialog
-import com.eji14.cattycat.ui.notification.NotificationBannerStack
 import com.eji14.cattycat.ui.screen.ProgressState
 import com.eji14.cattycat.ui.screen.ScreenHolder
 
@@ -51,16 +51,12 @@ import com.eji14.cattycat.ui.screen.ScreenHolder
 private fun BasicLayoutCore(
     modifier: Modifier = Modifier,
     holder: ScreenHolder? = null,
-
     topBar: (@Composable (Modifier) -> Unit)? = null,
     bottomBar: (@Composable (Modifier) -> Unit)? = null,
+    snackBarHost: (@Composable BoxScope.() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
-
-
     attachContentToBars: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-    config: AppConfigBase = LocalAppConfigBase.current,
-
     background: Color = Color.White,
     content: @Composable (contentModifier: Modifier, nestedScrollModifier: Modifier) -> Unit,
 ) {
@@ -81,7 +77,7 @@ private fun BasicLayoutCore(
     ConstraintLayout(modifier = modifier
         .background(background)
         .fillMaxSize()) {
-        val (topBarRef, progressRef, bottomBarRef, notificationRef, contentRef, loadingRef) = createRefs()
+        val (topBarRef, progressRef, bottomBarRef, contentRef, loadingRef, snackBarRef) = createRefs()
 
 
         fun contentConstraints(ref: ConstrainedLayoutReference) = Modifier.constrainAs(ref) {
@@ -111,7 +107,6 @@ private fun BasicLayoutCore(
                     .padding(contentPadding), nestedScrollModifier)
             }
         } else {
-
             content(
                 contentConstraints(contentRef)
                     .fillMaxSize()
@@ -125,18 +120,6 @@ private fun BasicLayoutCore(
                 contentAlignment = Alignment.Center,
                 modifier = contentConstraints(loadingRef).fillMaxSize(),
             ) { CircularProgressIndicator() }
-        }
-
-        if (holder != null && holder.notifications.isNotEmpty()) {
-            NotificationBannerStack(
-                notifications = holder.notifications,
-                config = config,
-                modifier = Modifier.constrainAs(notificationRef) {
-                    top.linkTo(if (topBar != null) topBarRef.bottom else parent.top)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                },
-            )
         }
 
         topBar?.invoke(Modifier.constrainAs(topBarRef) {
@@ -157,13 +140,13 @@ private fun BasicLayoutCore(
             ) {
                 when (val state = holder.progressState) {
                     is ProgressState.Indeterminate -> LinearProgressIndicator(
-                        color = config.subColors.primary,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     is ProgressState.Determinate -> LinearProgressIndicator(
                         progress = { state.progress },
-                        color = config.subColors.secondary,
+                        color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -193,6 +176,12 @@ private fun BasicLayoutCore(
                     .clickable(remember { MutableInteractionSource() }, null) { holder.todoState.showDialog = true }
             )
         }
+
+        if (snackBarHost != null) Box(Modifier.constrainAs(snackBarRef) {
+            bottom.linkTo(parent.bottom)
+            start.linkTo(parent.start)
+            end.linkTo(parent.end)
+        }.windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 10.dp), content = snackBarHost)
     }
 }
 
@@ -203,23 +192,22 @@ fun BasicLayout(
     holder: ScreenHolder? = null,
     topBar: (@Composable (Modifier) -> Unit)? = null,
     bottomBar: (@Composable (Modifier) -> Unit)? = null,
+    snackBarHost: (@Composable BoxScope.() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     scrollable: Boolean = true,
     attachContentToBars: Boolean = true,
     contentAlignment: Alignment.Horizontal = Alignment.Start,
     contentArrangement: Arrangement.Vertical = Arrangement.spacedBy(10.dp),
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-    config: AppConfigBase = LocalAppConfigBase.current,
     background: Color = Color.White,
     content: @Composable ColumnScope.() -> Unit,
-) = BasicLayoutCore(modifier, holder, topBar, bottomBar, scrollBehavior, attachContentToBars, contentPadding, config, background) { contentMod, nestedMod ->
+) = BasicLayoutCore(modifier, holder, topBar, bottomBar, snackBarHost, scrollBehavior, attachContentToBars, contentPadding, background) { contentMod, nestedMod ->
     Column(
-
         modifier = nestedMod.then(contentMod)
             .let { if (scrollable) it.verticalScroll(holder?.scrollState ?: rememberScrollState()) else it },
         verticalArrangement = contentArrangement,
         horizontalAlignment = contentAlignment,
-        content = content,
+        content = content
     )
 }
 
@@ -230,16 +218,16 @@ fun LazyBasicLayout(
     holder: ScreenHolder? = null,
     topBar: (@Composable (Modifier) -> Unit)? = null,
     bottomBar: (@Composable (Modifier) -> Unit)? = null,
+    snackBarHost: (@Composable BoxScope.() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     attachContentToBars: Boolean = true,
     contentAlignment: Alignment.Horizontal = Alignment.Start,
     contentArrangement: Arrangement.Vertical = Arrangement.spacedBy(10.dp),
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-    config: AppConfigBase = LocalAppConfigBase.current,
     background: Color = Color.White,
     lazyListState: LazyListState = rememberLazyListState(),
     content: LazyListScope.() -> Unit,
-) = BasicLayoutCore(modifier, holder, topBar, bottomBar, scrollBehavior, attachContentToBars, contentPadding, config, background) { contentMod, nestedMod ->
+) = BasicLayoutCore(modifier, holder, topBar, bottomBar, snackBarHost, scrollBehavior, attachContentToBars, contentPadding, background) { contentMod, nestedMod ->
     LazyColumn(
         modifier = nestedMod.then(contentMod),
         verticalArrangement = contentArrangement,
